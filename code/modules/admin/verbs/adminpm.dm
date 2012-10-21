@@ -58,9 +58,12 @@
 	if (src.handle_spam_prevention(msg,MUTE_ADMINHELP))
 		return
 
+	// Sanitize admin msgs too - Nanodesu
+	msg = sanitize(msg)
+
 	//clean the message if it's not sent by a GA or GM
 	if( !holder || !(holder.rank in list("Game Admin", "Game Master")) )
-		msg = sanitize(copytext(msg,1,MAX_MESSAGE_LEN))
+		msg = copytext(msg,1,MAX_MESSAGE_LEN)
 		if(!msg)	return
 
 	if(C.holder)
