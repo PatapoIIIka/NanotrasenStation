@@ -246,7 +246,7 @@ Starting up. [time2text(world.timeofday, "hh:mm.ss")]
 	if (config && config.server_name)
 		s += "<b>[config.server_name]</b> &#8212; "
 
-	s += "<b>\[Russian only\] NanodesuStation 13</b> &#8212; "*
+	s += "<b>\[Russian only\] NanodesuStation 13</b> &#8212; "
 	s += "<b>[station_name()]</b>";
 	s += " ("
 	s += "<a href=\"http://ss13.tk\">"
