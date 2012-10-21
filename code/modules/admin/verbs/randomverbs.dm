@@ -450,6 +450,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	var/input = input(usr, "Please enter anything you want the AI to do. Anything. Serious.", "What?", "") as text|null
 	if(!input)
 		return
+	input = sanitize(input) //Sanitize AI law text - Nanodesu
 	for(var/mob/living/silicon/ai/M in mob_list)
 		if (M.stat == 2)
 			usr << "Upload failed. No signal is being detected from the AI."

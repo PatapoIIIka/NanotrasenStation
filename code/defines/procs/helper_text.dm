@@ -36,6 +36,10 @@
 
 // &#1103; - unicode ya, &#255; - ansi ya
 // html_encode will kill both "ya" and its html ampersand representation
+// BYOND reserves ASCII #255, and this behavior is WONTFIX.
+// Most user popup inputs are unicode
+// - Nanodesu
+
 //Removes a few problematic characters
 /proc/sanitize_simple(var/t,var/list/repl_chars = list("\n"="#","\t"="#","ÿ"="____255_"))
 	for(var/char in repl_chars)

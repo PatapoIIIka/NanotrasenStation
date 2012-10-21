@@ -335,7 +335,7 @@ var/list/slot_equipment_priority = list( \
 
 	if(msg != null)
 		msg = copytext(msg, 1, MAX_MESSAGE_LEN)
-		msg = html_encode(msg)
+		msg = sanitize(msg) // Sanitize instead of html_encode
 
 		flavor_text = msg
 
