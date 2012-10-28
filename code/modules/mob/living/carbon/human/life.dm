@@ -38,13 +38,14 @@
 
 	..()
 
+	/*
 	//This code is here to try to determine what causes the gender switch to plural error. Once the error is tracked down and fixed, this code should be deleted
 	//Also delete var/prev_gender once this is removed.
 	if(prev_gender != gender)
 		prev_gender = gender
 		if(gender in list(PLURAL, NEUTER))
 			message_admins("[src] ([ckey]) gender has been changed to plural or neuter. Please record what has happened recently to the person and then notify coders. (<A HREF='?src=%holder_ref%;adminmoreinfo=\ref[src]'>?</A>)  (<A HREF='?src=%holder_ref%;adminplayervars=\ref[src]'>VV</A>) (<A HREF='?src=%admin_ref%;priv_msg=\ref[src]'>PM</A>) (<A HREF='?src=%holder_ref%;adminplayerobservejump=\ref[src]'>JMP</A>)",1,1) //The 1,1 at the end is there to make '%holder_ref%' get replaced with the actual ref object
-
+	*/
 	//Apparently, the person who wrote this code designed it so that
 	//blinded get reset each cycle and then get activated later in the
 	//code. Very ugly. I dont care. Moving this stuff here so its easy
@@ -90,6 +91,10 @@
 
 	//stuff in the stomach
 	handle_stomach()
+
+	handle_shock()
+
+	handle_pain()
 
 	//Status updates, death etc.
 	handle_regular_status_updates()		//TODO: optimise ~Carn
@@ -309,7 +314,7 @@
 
 	proc/handle_mutations_and_radiation()
 		if(getFireLoss())
-			if((COLD_RESISTANCE in mutations) || (prob(1) && prob(75)))
+			if((COLD_RESISTANCE in mutations) || (prob(1)))
 				heal_organ_damage(0,1)
 
 		// Make nanoregen heal youu, -3 all damage types
@@ -552,7 +557,7 @@
 
 		if(Toxins_pp > safe_toxins_max) // Too much toxins
 			var/ratio = breath.toxins/safe_toxins_max
-			adjustToxLoss(min(ratio, 10))	//Limit amount of damage toxin exposure can do per second
+			adjustToxLoss(min(ratio, MIN_PLASMA_DAMAGE))	//Limit amount of damage toxin exposure can do per second
 			toxins_alert = max(toxins_alert, 1)
 		else
 			toxins_alert = 0
@@ -967,6 +972,8 @@
 				silent = 0
 				return 1
 
+			// the analgesic effect wears off slowly
+			analgesic = max(0, analgesic - 1)
 
 			//UNCONSCIOUS. NO-ONE IS HOME
 			if( (getOxyLoss() > 50) || (config.health_threshold_crit > health) )
@@ -1305,8 +1312,16 @@
 			if(eye_blurry)			client.screen += global_hud.blurry
 			if(druggy)				client.screen += global_hud.druggy
 
+			var/masked = 0
+
 			if( istype(head, /obj/item/clothing/head/welding) )
 				var/obj/item/clothing/head/welding/O = head
+				if(!O.up && tinted_weldhelh)
+					client.screen += global_hud.darkMask
+					masked = 1
+
+			if(!masked && istype(glasses, /obj/item/clothing/glasses/welding) )
+				var/obj/item/clothing/glasses/welding/O = glasses
 				if(!O.up && tinted_weldhelh)
 					client.screen += global_hud.darkMask
 
@@ -1374,6 +1389,44 @@
 	proc/handle_changeling()
 		if(mind && mind.changeling)
 			mind.changeling.regenerate()
+
+	handle_shock()
+		..()
+
+		if(analgesic) return // analgesic avoids all traumatic shock temporarily
+
+		if(health < 0)// health 0 makes you immediately collapse
+			shock_stage = max(shock_stage, 61)
+
+		if(traumatic_shock >= 80)
+			shock_stage += 1
+		else
+			shock_stage = min(shock_stage, 100)
+			shock_stage = max(shock_stage-1, 0)
+			return
+
+		if(shock_stage == 10)
+			src << "<font color='red'><b>"+pick("It hurts so much!", "You really need some painkillers..", "Dear god, the pain!")
+
+		if(shock_stage >= 30)
+			if(shock_stage == 30) emote("me",1,"is having trouble keeping their eyes open.")
+			eye_blurry = max(2, eye_blurry)
+			stuttering = max(stuttering, 5)
+
+		if(shock_stage == 40)
+			src << "<font color='red'><b>"+pick("The pain is excrutiating!", "Please, just end the pain!", "Your whole body is going numb!")
+
+		if (shock_stage >= 60)
+			if(shock_stage == 60) emote("me",1,"'s body becomes limp.")
+			if (prob(5))
+				Stun(20)
+				lying = 1
+
+		if(shock_stage == 80)
+			src << "<font color='red'><b>"+pick("You see a light at the end of the tunnel!", "You feel like you could die any moment now.", "You're about to lose consciousness.")
+
+		if (shock_stage > 80)
+			Paralyse(rand(15,28))
 
 #undef HUMAN_MAX_OXYLOSS
 #undef HUMAN_CRIT_MAX_OXYLOSS
