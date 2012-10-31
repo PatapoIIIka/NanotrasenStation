@@ -10,6 +10,8 @@
 	var/on = 0
 	color = "engineering" //Determines used sprites: rig[on]-[color] and rig[on]-[color]2 (lying down sprite)
 	icon_action_button = "action_hardhat"
+	heat_protection = HEAD
+	max_heat_protection_temperature = SPACE_SUIT_MAX_HEAT_PROTECITON_TEMPERATURE
 
 	attack_self(mob/user)
 		if(!isturf(user.loc))
@@ -42,6 +44,8 @@
 	slowdown = 2
 	armor = list(melee = 40, bullet = 5, laser = 20,energy = 5, bomb = 35, bio = 100, rad = 60)
 	allowed = list(/obj/item/device/flashlight,/obj/item/weapon/tank,/obj/item/weapon/storage/satchel,/obj/item/device/t_scanner,/obj/item/weapon/pickaxe, /obj/item/weapon/rcd)
+	heat_protection = UPPER_TORSO|LOWER_TORSO|LEGS|FEET|ARMS|HANDS
+	max_heat_protection_temperature = SPACE_SUIT_MAX_HEAT_PROTECITON_TEMPERATURE
 
 
 //Chief Engineer's rig
@@ -121,3 +125,28 @@
 	unacidable = 1
 	armor = list(melee = 40, bullet = 20, laser = 20,energy = 20, bomb = 35, bio = 100, rad = 60)
 	allowed = list(/obj/item/weapon/teleportation_scroll,/obj/item/weapon/tank/emergency_oxygen)
+
+//Atmos Rig
+/obj/item/clothing/head/helmet/space/rig/atmos
+	name = "atmospherics pressure suit helmet"
+	icon_state = "rig0-atmos"
+	item_state = "atmos_helm"
+	color = "atmos"
+	flags = STOPSPRESSUREDMAGE
+	armor = list(melee = 40, bullet = 0, laser = 0, energy = 0, bomb = 25, bio = 100, rad = 0)
+	gas_transfer_coefficient = 0
+	permeability_coefficient = 0
+	heat_protection = HEAD
+	max_heat_protection_temperature = FIRE_HELMET_MAX_HEAT_PROTECITON_TEMPERATURE
+
+/obj/item/clothing/suit/space/rig/atmos
+	icon_state = "rig-atmos"
+	name = "atmospherics pressure suit"
+	item_state = "atmos_hardsuit"
+	flags = STOPSPRESSUREDMAGE
+	armor = list(melee = 40, bullet = 0, laser = 0, energy = 0, bomb = 25, bio = 100, rad = 0)
+	gas_transfer_coefficient = 0
+	permeability_coefficient = 0
+	slowdown = 1.0
+	heat_protection = UPPER_TORSO|LOWER_TORSO|LEGS|FEET|ARMS|HANDS
+	max_heat_protection_temperature = FIRESUIT_MAX_HEAT_PROTECITON_TEMPERATURE

@@ -216,7 +216,6 @@ proc/get_damage_icon_part(damage_state, body_part)
 
 //BASE MOB SPRITE
 /mob/living/carbon/human/proc/update_body(var/update_icons=1)
-
 	if(stand_icon)	del(stand_icon)
 	if(lying_icon)	del(lying_icon)
 	if(dna && dna.mutantrace)	return
@@ -229,7 +228,7 @@ proc/get_damage_icon_part(damage_state, body_part)
 	if(gender == FEMALE)	g = "f"
 
 	// whether to draw the individual limbs
-	var/individual_limbs = 1
+	var/individual_limbs = 0
 
 	//Base mob icon
 	if(husk)
@@ -242,12 +241,25 @@ proc/get_damage_icon_part(damage_state, body_part)
 		stand_icon = new /icon('icons/mob/human.dmi', "skeleton_s")
 		lying_icon = new /icon('icons/mob/human.dmi', "skeleton_l")
 	else
-		stand_icon = new /icon('icons/mob/human.dmi', "body_[g]_s")
-		lying_icon = new /icon('icons/mob/human.dmi', "body_[g]_l")
-		individual_limbs = 0
+		stand_icon = new /icon('icons/mob/human.dmi', "torso_[g]_s")
+		lying_icon = new /icon('icons/mob/human.dmi', "torso_[g]_l")
+		individual_limbs = 1
 
-	// Draw each individual limb
-	if(individual_limbs)
+	//remove destroyed limbs from base icon
+	for(var/datum/organ/external/part in organs)
+		if(!istype(part, /datum/organ/external/groin) \
+		&& !istype(part, /datum/organ/external/chest) \
+		&& (part.status & ORGAN_DESTROYED))
+			var/icon/temp = new /icon('dam_mask.dmi', "[part.icon_name]")
+			temp.MapColors(-1,0,0,0, 0,-1,0,0, 0,0,-1,0, 0,0,0,-1, 1,1,1,1)
+			stand_icon.AddAlphaMask(temp)
+
+			temp = new /icon('dam_mask.dmi', "[part.icon_name]2")
+			temp.MapColors(-1,0,0,0, 0,-1,0,0, 0,0,-1,0, 0,0,0,-1, 1,1,1,1)
+			lying_icon.AddAlphaMask(temp)
+
+	// Draw each individual limb (AterIgnis: not sure why this is needed at all - base icon have all of these, but that was before me)
+	if(!husk && individual_limbs)
 		stand_icon.Blend(new /icon('icons/mob/human.dmi', "chest_[g]_s"), ICON_OVERLAY)
 		lying_icon.Blend(new /icon('icons/mob/human.dmi', "chest_[g]_l"), ICON_OVERLAY)
 
@@ -256,35 +268,24 @@ proc/get_damage_icon_part(damage_state, body_part)
 			stand_icon.Blend(new /icon('icons/mob/human.dmi', "head_[g]_s"), ICON_OVERLAY)
 			lying_icon.Blend(new /icon('icons/mob/human.dmi', "head_[g]_l"), ICON_OVERLAY)
 
-		for(var/datum/organ/external/part in organs)
-			if(!istype(part, /datum/organ/external/groin) \
-				&& !istype(part, /datum/organ/external/chest) \
-				&& !istype(part, /datum/organ/external/head) \
-				&& !(part.status & ORGAN_DESTROYED))
-				var/icon/temp = new /icon('human.dmi', "[part.icon_name]_s")
-				if(part.status & ORGAN_ROBOT) temp.MapColors(rgb(77,77,77), rgb(150,150,150), rgb(28,28,28), rgb(0,0,0))
-				stand_icon.Blend(temp, ICON_OVERLAY)
-				temp = new /icon('human.dmi', "[part.icon_name]_l")
-				if(part.status & ORGAN_ROBOT) temp.MapColors(rgb(77,77,77), rgb(150,150,150), rgb(28,28,28), rgb(0,0,0))
-				lying_icon.Blend(temp , ICON_OVERLAY)
-
 		stand_icon.Blend(new /icon('human.dmi', "groin_[g]_s"), ICON_OVERLAY)
 		lying_icon.Blend(new /icon('human.dmi', "groin_[g]_l"), ICON_OVERLAY)
 
-	if (husk)
-		var/icon/husk_s = new /icon('human.dmi', "husk_s")
-		var/icon/husk_l = new /icon('human.dmi', "husk_l")
+	// Draw nondestroyed robotic limbs grayscale
+	for(var/datum/organ/external/part in organs)
+		if(!istype(part, /datum/organ/external/groin) \
+			&& !istype(part, /datum/organ/external/chest) \
+			&& !istype(part, /datum/organ/external/head) \
+			&& !(part.status & ORGAN_DESTROYED))
+			var/icon/temp = new /icon('human.dmi', "[part.icon_name]_s")
+			if(part.status & ORGAN_ROBOT)
+				temp.MapColors(rgb(77,77,77,0), rgb(150,150,150), rgb(28,28,28), rgb(0,0,0))
+			stand_icon.Blend(temp, ICON_OVERLAY)
 
-		for(var/datum/organ/external/part in organs)
-			if(!istype(part, /datum/organ/external/groin) \
-				&& !istype(part, /datum/organ/external/chest) \
-				&& !istype(part, /datum/organ/external/head) \
-				&& (part.status & ORGAN_DESTROYED))
-				husk_s.Blend(new /icon('dam_mask.dmi', "[part.icon_name]"), ICON_SUBTRACT)
-				husk_l.Blend(new /icon('dam_mask.dmi', "[part.icon_name]2"), ICON_SUBTRACT)
-
-		stand_icon.Blend(husk_s, ICON_OVERLAY)
-		lying_icon.Blend(husk_l, ICON_OVERLAY)
+			temp = new /icon('human.dmi', "[part.icon_name]_l")
+			if(part.status & ORGAN_ROBOT)
+				temp.MapColors(rgb(77,77,77,0), rgb(150,150,150), rgb(28,28,28), rgb(0,0,0))
+			lying_icon.Blend(temp, ICON_OVERLAY)
 
 	//Skin tone
 	if(!skeleton)

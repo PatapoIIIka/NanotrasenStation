@@ -258,6 +258,12 @@
 			number_wounds += E.number_wounds
 
 		var/leg_tally = 2
+		var/canstand_l = 1  //Can stand on left leg
+		var/canstand_r = 1  //Can stand on right leg
+		var/hasleg_l = 1  //Have left leg
+		var/hasleg_r = 1  //Have right leg
+		var/hasarm_l = 1  //Have left arm
+		var/hasarm_r = 1  //Have right arm
 		for(var/datum/organ/external/E in organs)
 			E.process()
 			if(E.status & ORGAN_ROBOT && prob(E.brute_dam + E.burn_dam))
@@ -284,7 +290,7 @@
 				else if(E.name == "l_leg" || E.name == "l_foot" \
 					|| E.name == "r_leg" || E.name == "r_foot" && !lying)
 					leg_tally--									// let it fail even if just foot&leg
-			if(E.status & ORGAN_BROKEN || E.status & ORGAN_DESTROYED)
+			if(E.status & ORGAN_BROKEN || (E.status & ORGAN_DESTROYED && !E.amputated))
 				if(E.name == "l_hand" || E.name == "l_arm")
 					if(hand && equipped())
 						if(E.status & ORGAN_SPLINTED && prob(10))
@@ -305,11 +311,41 @@
 					|| E.name == "r_leg" || E.name == "r_foot" && !lying)
 					if(!(E.status & ORGAN_SPLINTED))
 						leg_tally--									// let it fail even if just foot&leg
+
 		// standing is poor
 		if(leg_tally <= 0 && !paralysis && !(lying || resting) && prob(5))
 			emote("scream")
 			emote("collapse")
 			paralysis = 10
+
+
+		//Check arms and legs for existence
+		var/datum/organ/external/E
+		E = get_organ("l_leg")
+		if(E.status & ORGAN_DESTROYED && !(E.status & ORGAN_SPLINTED))
+			canstand_l = 0
+			hasleg_l = 0
+		E = get_organ("r_leg")
+		if(E.status & ORGAN_DESTROYED && !(E.status & ORGAN_SPLINTED))
+			canstand_r = 0
+			hasleg_r = 0
+		E = get_organ("l_foot")
+		if(E.status & ORGAN_DESTROYED && !(E.status & ORGAN_SPLINTED))
+			canstand_l = 0
+		E = get_organ("r_foot")
+		if(E.status & ORGAN_DESTROYED && !(E.status & ORGAN_SPLINTED))
+			canstand_r = 0
+		E = get_organ("l_arm")
+		if(E.status & ORGAN_DESTROYED && !(E.status & ORGAN_SPLINTED))
+			hasarm_l = 0
+		E = get_organ("r_arm")
+		if(E.status & ORGAN_DESTROYED && !(E.status & ORGAN_SPLINTED))
+			hasarm_r = 0
+
+		// Can stand if have at least one full leg (with leg and foot parts present)
+		// Has limbs to move around if at least one arm or leg is at least partially there
+		can_stand = canstand_l||canstand_r
+		has_limbs = hasleg_l||hasleg_r||hasarm_l||hasarm_r
 
 
 	proc/handle_mutations_and_radiation()
@@ -320,25 +356,50 @@
 		// Make nanoregen heal youu, -3 all damage types
 		if(NANOREGEN in augmentations)
 			var/healed = 0
-			if(getToxLoss())
-				adjustToxLoss(-3)
-				healed = 1
-			if(getOxyLoss())
-				adjustOxyLoss(-3)
-				healed = 1
-			if(getCloneLoss())
-				adjustCloneLoss(-3)
-				healed = 1
-			if(getBruteLoss())
-				heal_organ_damage(3,0)
-				healed = 1
-			if(getFireLoss())
-				heal_organ_damage(0,3)
-				healed = 1
-			if(halloss > 0)
-				halloss -= 3
-				if(halloss < 0) halloss = 0
-				healed = 1
+			var/hptoreg = 3
+			if(stat==UNCONSCIOUS) hptoreg=1
+			if(stat==DEAD) hptoreg=0
+			for(var/i=0; i<hptoreg; i++)
+				var/list/damages
+				if(getToxLoss())
+					damages+="tox"
+				if(getOxyLoss())
+					damages+="oxy"
+				if(getCloneLoss())
+					damages+="clone"
+				if(getBruteLoss())
+					damages+="brute"
+				if(getFireLoss())
+					damages+="burn"
+				if(halloss != 0)
+					damages+="hal"
+
+				if(damages.len)
+					switch(pick(damages))
+						if("tox")
+							adjustToxLoss(-1)
+							healed = 1
+						if("oxy")
+							adjustOxyLoss(-1)
+							healed = 1
+						if("clone")
+							adjustCloneLoss(-1)
+							healed = 1
+						if("brute")
+							heal_organ_damage(1,0)
+							healed = 1
+						if("burn")
+							heal_organ_damage(0,1)
+							healed = 1
+						if("hal")
+							if(halloss > 0)
+								halloss -= 1
+							if(halloss < 0)
+								halloss = 0
+							healed = 1
+				else
+					break
+
 			if(healed)
 				if(prob(5))
 					src << "\blue You feel your wounds mending..."
@@ -1367,7 +1428,28 @@
 		if(bodytemperature > 406)
 			for(var/datum/disease/D in viruses)
 				D.cure()
-		return
+
+		if(!virus2)
+			for(var/obj/effect/decal/cleanable/blood/B in view(1,src))
+				if(B.virus2 && get_infection_chance())
+					infect_virus2(src,B.virus2)
+			for(var/obj/effect/decal/cleanable/mucus/M in view(1,src))
+				if(M.virus2 && get_infection_chance())
+					infect_virus2(src,M.virus2)
+		else
+			if(isnull(virus2)) // Trying to figure out a runtime error that keeps repeating
+				CRASH("virus2 nulled before calling activate()")
+			else
+				virus2.activate(src)
+
+			// activate may have deleted the virus
+			if(!virus2) return
+
+			// check if we're immune
+			if(virus2.antigen & src.antibodies) virus2.dead = 1
+
+
+			return
 
 	proc/handle_stomach()
 		spawn(0)

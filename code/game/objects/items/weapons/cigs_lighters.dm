@@ -62,7 +62,7 @@ ZIPPO
 	var/lit = 0
 	var/icon_on = "cigon"  //Note - these are in masks.dmi not in cigarette.dmi
 	var/icon_off = "cigoff"
-	var/type_butt = /obj/item/weapon/cigbutt
+	var/butt_icon = "cigbutt"
 	var/lastHolder = null
 	var/smoketime = 300
 	var/chem_volume = 15
@@ -115,15 +115,16 @@ ZIPPO
 
 /obj/item/clothing/mask/cigarette/afterattack(obj/item/weapon/reagent_containers/glass/glass, mob/user as mob)
 	..()
-	if(istype(glass))	//you can dip cigarettes into beakers
-		var/transfered = glass.reagents.trans_to(src, chem_volume)
-		if(transfered)	//if reagents were transfered, show the message
-			user << "<span class='notice'>You dip \the [src] into \the [glass].</span>"
-		else			//if not, either the beaker was empty, or the cigarette was full
-			if(!glass.reagents.total_volume)
-				user << "<span class='notice'>[glass] is empty.</span>"
-			else
-				user << "<span class='notice'>[src] is full.</span>"
+	if(lit == 0)
+		if(istype(glass))	//you can dip cigarettes into beakers
+			var/transfered = glass.reagents.trans_to(src, chem_volume)
+			if(transfered)	//if reagents were transfered, show the message
+				user << "<span class='notice'>You dip \the [src] into \the [glass].</span>"
+			else			//if not, either the beaker was empty, or the cigarette was full
+				if(!glass.reagents.total_volume)
+					user << "<span class='notice'>[glass] is empty.</span>"
+				else
+					user << "<span class='notice'>[src] is full.</span>"
 
 
 /obj/item/clothing/mask/cigarette/proc/light(var/flavor_text = "[usr] lights the [name].")
@@ -155,37 +156,49 @@ ZIPPO
 	var/turf/location = get_turf(src)
 	smoketime--
 	if(smoketime < 1)
-		new type_butt(location)
-		processing_objects.Remove(src)
+		put_out()
 		if(ismob(loc))
 			var/mob/living/M = loc
 			M << "<span class='notice'>Your [name] goes out.</span>"
 			M.u_equip(src)	//un-equip it so the overlays can update
 			M.update_inv_wear_mask(0)
-		del(src)
 		return
-	if(location)
-		location.hotspot_expose(700, 5)
-	if(reagents && reagents.total_volume)	//	check if it has any reagents at all
-		if(iscarbon(loc) && (src == loc:wear_mask)) // if it's in the human/monkey mouth, transfer reagents to the mob
-			var/mob/living/carbon/C = loc
-			if(prob(15)) // so it's not an instarape in case of acid
-				reagents.reaction(C, INGEST)
-			reagents.trans_to(C, REAGENTS_METABOLISM)
-		else // else just remove some of the reagents
-			reagents.remove_any(REAGENTS_METABOLISM)
+	if(lit == 1)
+		if(location)
+			location.hotspot_expose(700, 5)
+		if(reagents && reagents.total_volume)	//	check if it has any reagents at all
+			if(iscarbon(loc) && (src == loc:wear_mask)) // if it's in the human/monkey mouth, transfer reagents to the mob
+				var/mob/living/carbon/C = loc
+				if(prob(15)) // so it's not an instarape in case of acid
+					reagents.reaction(C, INGEST)
+				reagents.trans_to(C, REAGENTS_METABOLISM)
+			else // else just remove some of the reagents
+				reagents.remove_any(REAGENTS_METABOLISM)
 	return
 
 
 /obj/item/clothing/mask/cigarette/attack_self(mob/user as mob)
 	if(lit == 1)
-		user.visible_message("<span class='notice'>[user] calmly drops and treads on the lit [src], putting it out instantly.</span>")
-		var/turf/T = get_turf(src)
-		new type_butt(T)
-		processing_objects.Remove(src)
-		del(src)
+		var/mob/living/carbon/human/H = user
+		if(H.shoes)
+			user.visible_message("<span class='notice'>[user] crushes [src] on the sole of his shoes, putting it out instantly.</span>")
+		else
+			user.visible_message("<span class='notice'>[user] spits oh his fingers, then puts down [src].</span>")
+		put_out()
 	return ..()
 
+
+/obj/item/clothing/mask/cigarette/proc/put_out()
+	if(src.lit == 1)
+		src.lit = -1
+		icon_state = src.butt_icon
+		desc = "Old manky [src] butt."
+		name = "[src] butt"
+		attack_verb = list("poked")
+		processing_objects.Remove(src)
+		if (usr)
+			usr.update_inv_l_hand()
+			usr.update_inv_r_hand()
 
 
 ////////////
@@ -197,7 +210,7 @@ ZIPPO
 	icon_state = "cigaroff"
 	icon_on = "cigaron"
 	icon_off = "cigaroff"
-	type_butt = /obj/item/weapon/cigbutt/cigarbutt
+	butt_icon = "cigarbutt"
 	throw_speed = 0.5
 	item_state = "cigaroff"
 	smoketime = 1500
