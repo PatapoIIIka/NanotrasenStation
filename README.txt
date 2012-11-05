@@ -1,5 +1,8 @@
 tgstation13 v1.0 - 6 October 2010
 
+Форк с исправленной кириллицей в чате (say, ooc, adminpm и т.д.) - Nanodesu
+Список коммитов будет там: https://github.com/tehdrama/Baystation12/issues/7
+
 Website: http://nanotrasen.com
 Code: http://code.google.com/p/tgstation13/
 IRC: irc://irc.rizon.net/tgstation13
