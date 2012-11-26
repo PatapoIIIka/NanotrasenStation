@@ -313,10 +313,10 @@ Starting up. [time2text(world.timeofday, "hh:mm.ss")]
 	if (config && config.server_name)
 		s += "<b>[config.server_name]</b> &#8212; "
 
-	s += "<b>\[EU/RU\] NanodesuStation 13</b> &#8212; "
+	s += "<b>\[EU/RU\] Nanotrasen Station </b> &#8212; "
 	s += "<b>[station_name()]</b>";
 	s += " ("
-	s += "<a href=\"http://ss13.tk\">"
+	s += "<a href=\"http://nanotrasen.ru\">"
 	s += "[game_version]"
 //	s += "Default"  //Replace this with something else. Or ever better, delete it and uncomment the game version.
 	s += "</a>"
