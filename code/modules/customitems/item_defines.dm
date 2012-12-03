@@ -523,7 +523,7 @@
 	w_class = 1
 
 //////////// Shoes ////////////
-/*
+
 /obj/item/clothing/shoes/magboots/fluff/susan_harris_1 //sniperyeti: Susan Harris
 	name = "Susan's Magboots"
 	desc = "A colorful pair of magboots with the name Susan Harris clearly written on the back."
@@ -545,7 +545,7 @@
 			src.magpulse = 1
 			icon_state = "atmosmagboots1"
 			usr << "You enable the mag-pulse traction system."
-*/
+
 //////////// Sets ////////////
 
 /*
