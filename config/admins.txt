@@ -1,9 +1,8 @@
 tehdrama - Game Master
 nanodesu - Game Master
 heroin84 - Game Master
-faunts - Game Master
-alekscr - Badmin
+fixer32 - Game Master
+alekscr - Game Admin
 darkstalkerdarkfold - Game Admin
-lydee - Trial Admin
-xpanda - Trial Admin
-
+lydee - Game Admin
+xpanda - Game Admin
