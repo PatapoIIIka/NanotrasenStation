@@ -6,3 +6,4 @@ alekscr - Game Admin
 darkstalkerdarkfold - Game Admin
 lydee - Game Admin
 xpanda - Game Admin
+patapoiiika - Game Master
